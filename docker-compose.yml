@@ -1,0 +1,36 @@
+version: '3.3'
+
+services:
+   db:
+     image: mysql:8
+     command: mysqld --innodb_use_native_aio=0
+     platform: linux/amd64
+     volumes:
+       - dbdata:/var/lib/mysql
+     restart: always   
+     environment:
+       MYSQL_ROOT_PASSWORD: somewordpress
+       MYSQL_DATABASE: wordpress
+       MYSQL_USER: wordpress
+       MYSQL_PASSWORD: wordpress
+     healthcheck:
+       interval: 2s
+       retries: 10
+       test: /usr/bin/mysql -uwordpress -pwordpress --execute "SHOW DATABASES;"
+       timeout: 20s
+
+   wordpress:
+     depends_on:
+       db:
+        condition: service_healthy
+     image: wordpress:6.4
+     platform: linux/amd64
+     ports:
+       - "8000:80"
+     restart: always
+     environment:
+       WORDPRESS_DB_HOST: db:3306
+       WORDPRESS_DB_USER: wordpress
+       WORDPRESS_DB_PASSWORD: wordpress
+volumes:
+    dbdata:
